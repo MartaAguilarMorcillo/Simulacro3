@@ -47,10 +47,17 @@ const create = async function (req, res) {
   }
 }
 
+// SOLUCIÓN
+// Forma de ordenar en función de un parámetro
 const show = async function (req, res) {
-  // Only returns PUBLIC information of restaurants
   try {
-    const restaurant = await Restaurant.findByPk(req.params.restaurantId, {
+    let restaurant = await Restaurant.findByPk(req.params.restaurantId)
+
+    const orderBy = restaurant.ordenar
+      ? [[{ model: Product, as: 'products' }, 'price', 'ASC']]
+      : [[{ model: Product, as: 'products' }, 'order', 'ASC']]
+
+    restaurant = await Restaurant.findByPk(req.params.restaurantId, {
       attributes: { exclude: ['userId'] },
       include: [{
         model: Product,
@@ -61,7 +68,7 @@ const show = async function (req, res) {
         model: RestaurantCategory,
         as: 'restaurantCategory'
       }],
-      order: [[{ model: Product, as: 'products' }, 'order', 'ASC']]
+      order: orderBy
     }
     )
     res.json(restaurant)
@@ -95,12 +102,36 @@ const destroy = async function (req, res) {
   }
 }
 
+// SOLUCIÓN
+// Si parámetro es true, ponerlo a false y viceversa
+const ordenar = async function (req, res) {
+  try {
+    const restaurant = await Restaurant.findByPk(req.params.restaurantId)
+    if (restaurant.ordenar === true) {
+      await Restaurant.update(
+        { ordenar: false },
+        { where: { id: req.params.restaurantId } }
+      )
+    } else {
+      await Restaurant.update(
+        { ordenar: true },
+        { where: { id: req.params.restaurantId } }
+      )
+    }
+    const updatedRestaurant = await Restaurant.findByPk(req.params.restaurantId)
+    res.json(updatedRestaurant)
+  } catch (err) {
+    res.status(500).send(err)
+  }
+}
+
 const RestaurantController = {
   index,
   indexOwner,
   create,
   show,
   update,
-  destroy
+  destroy,
+  ordenar
 }
 export default RestaurantController

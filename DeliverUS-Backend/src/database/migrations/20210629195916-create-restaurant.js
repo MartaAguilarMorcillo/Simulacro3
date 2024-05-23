@@ -86,6 +86,11 @@ module.exports = {
           },
           key: 'id'
         }
+      },
+      // SOLUCIÓN
+      ordenar: {
+        type: Sequelize.BOOLEAN,
+        defaultValue: false
       }
     })
   },
